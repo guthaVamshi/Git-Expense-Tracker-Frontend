@@ -3,6 +3,7 @@ import type { Expense } from '../lib/api'
 import { ExpenseAPI } from '../lib/api'
 import { useAuth } from '../store/auth'
 import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import { LoadingButton, ModernLoader } from '../components/LoadingOverlay'
 
 export default function DashboardPage() {
   const logout = useAuth((s) => s.logout)
@@ -15,6 +16,11 @@ export default function DashboardPage() {
   const [filterMode] = useState<'all' | 'monthly'>('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  
+  // Loading states for different operations
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeletingId, setIsDeletingId] = useState<number | null>(null)
+  const [operationMessage, setOperationMessage] = useState('')
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const load = async () => {
@@ -56,19 +62,58 @@ export default function DashboardPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.id) {
-      await ExpenseAPI.update(form)
-    } else {
-      await ExpenseAPI.add(form)
+    setIsSubmitting(true)
+    
+    try {
+      if (form.id) {
+        setOperationMessage('Updating transaction...')
+        await ExpenseAPI.update(form)
+        setOperationMessage('Transaction updated successfully!')
+      } else {
+        setOperationMessage('Adding transaction...')
+        await ExpenseAPI.add(form)
+        setOperationMessage('Transaction added successfully!')
+      }
+      
+      setForm({ expense: '', expenseType: 'Expense', expenseAmount: '', paymentMethod: 'Cash', date: todayStr })
+      await load()
+      
+      // Brief success message
+      setTimeout(() => {
+        setOperationMessage('')
+        setIsSubmitting(false)
+      }, 1000)
+    } catch {
+      setOperationMessage('Operation failed. Please try again.')
+      setTimeout(() => {
+        setOperationMessage('')
+        setIsSubmitting(false)
+      }, 2000)
     }
-    setForm({ expense: '', expenseType: 'Expense', expenseAmount: '', paymentMethod: 'Cash', date: todayStr })
-    await load()
   }
 
   const onDelete = async (id?: number) => {
     if (!id) return
-    await ExpenseAPI.remove(id)
-    await load()
+    setIsDeletingId(id)
+    setOperationMessage('Deleting transaction...')
+    
+    try {
+      await ExpenseAPI.remove(id)
+      setOperationMessage('Transaction deleted successfully!')
+      await load()
+      
+      // Brief success message
+      setTimeout(() => {
+        setOperationMessage('')
+        setIsDeletingId(null)
+      }, 1000)
+    } catch {
+      setOperationMessage('Failed to delete transaction.')
+      setTimeout(() => {
+        setOperationMessage('')
+        setIsDeletingId(null)
+      }, 2000)
+    }
   }
 
   const filtered = useMemo(() => {
@@ -155,7 +200,7 @@ export default function DashboardPage() {
     : 'min-h-screen loss-gradient relative overflow-hidden'
 
   return (
-    <div className={backgroundClass}>
+    <div className={`${backgroundClass} matrix-bg`}>
       {/* Floating background elements for depth */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {net >= 0 ? (
@@ -181,7 +226,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold holographic animate-pulse-geeky">
                 $ Paisa 
               </h1>
               <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-2xl text-sm font-semibold shadow-apple backdrop-blur-sm border transition-all duration-300 hover:scale-105 ${
@@ -196,18 +241,18 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
-              {/* User Info - Hide name on mobile */}
-              <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 bg-white/40 rounded-xl backdrop-blur-sm border border-white/20">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm">
+              {/* User Info - Improved mobile visibility */}
+              <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 bg-white/40 rounded-xl backdrop-blur-sm border border-white/20 animate-slide-in-right">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm animate-pulse-geeky">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <div className="text-xs sm:text-sm hidden sm:block">
-                  <div className="font-semibold text-gray-800">
+                <div className="text-xs sm:text-sm">
+                  <div className="font-semibold text-gray-800 truncate max-w-[80px] sm:max-w-none">
                     {username || 'User'}
                   </div>
-                  <div className="text-gray-600 text-xs">USER</div>
+                  <div className="text-gray-600 text-xs hidden sm:block">USER</div>
                 </div>
               </div>
               
@@ -376,12 +421,14 @@ export default function DashboardPage() {
             </div>
               </div>
               
-              <button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200"
+              <LoadingButton
+                type="submit"
+                loading={isSubmitting}
+                loadingText={form.id ? 'Updating...' : 'Adding...'}
+                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 btn-glitch relative overflow-hidden"
               >
                 {form.id ? 'Update Transaction' : 'Add Transaction'}
-              </button>
+              </LoadingButton>
           </form>
         </section>
 
@@ -551,12 +598,10 @@ export default function DashboardPage() {
               
               <div className="overflow-hidden rounded-2xl bg-white/50 backdrop-blur-sm border border-white/20">
                 {loading ? (
-                  <div className="p-8 text-center">
-                    <div className="inline-flex items-center gap-2 text-gray-500">
-                      <svg className="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Loading transactions...
+                  <div className="p-8 text-center animate-fade-in">
+                    <div className="inline-flex flex-col items-center gap-4 text-gray-500">
+                      <div className="w-8 h-8 border-2 border-transparent border-t-slate-600 rounded-full animate-spin"></div>
+                      <span className="text-sm font-medium text-slate-600">Loading transactions...</span>
                     </div>
                   </div>
                 ) : filtered.length === 0 ? (
@@ -623,16 +668,25 @@ export default function DashboardPage() {
                             <td className="py-4 px-6 text-right">
                               <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <button 
-                                  className="px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200"
+                                  className="px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200 disabled:opacity-50"
                                   onClick={() => setForm(it)}
+                                  disabled={isSubmitting || isDeletingId !== null}
                                 >
                                   Edit
                                 </button>
                                 <button 
-                                  className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                  className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
                                   onClick={() => onDelete(it.id)}
+                                  disabled={isSubmitting || isDeletingId !== null}
                                 >
-                                  Delete
+                                  {isDeletingId === it.id ? (
+                                    <>
+                                      <div className="w-3 h-3 border border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                      <span>Deleting</span>
+                                    </>
+                                  ) : (
+                                    'Delete'
+                                  )}
                                 </button>
                               </div>
                       </td>
@@ -683,15 +737,24 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2">
                             <button 
                               onClick={() => setForm(it)}
-                              className="px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200"
+                              disabled={isSubmitting || isDeletingId !== null}
+                              className="px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200 disabled:opacity-50"
                             >
                               Edit
                             </button>
                             <button 
                               onClick={() => onDelete(it.id)}
-                              className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                              disabled={isSubmitting || isDeletingId !== null}
+                              className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
                             >
-                              Delete
+                              {isDeletingId === it.id ? (
+                                <>
+                                  <div className="w-3 h-3 border border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                  <span>Deleting</span>
+                                </>
+                              ) : (
+                                'Delete'
+                              )}
                             </button>
                           </div>
                         </div>
@@ -705,6 +768,13 @@ export default function DashboardPage() {
         </section>
         </div>
       </main>
+      
+      {/* Modern Minimal Loading Overlay */}
+      <ModernLoader 
+        isVisible={isSubmitting || isDeletingId !== null} 
+        message={operationMessage}
+        variant={operationMessage.includes('successfully') ? 'dots' : 'ring'}
+      />
     </div>
   )
 }

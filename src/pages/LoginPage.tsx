@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../store/auth'
 import { ExpenseAPI, UserAPI } from '../lib/api'
+import { LoadingButton } from '../components/LoadingOverlay'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -25,8 +26,9 @@ export default function LoginPage() {
       // Test the auth by making a request
       await ExpenseAPI.list()
       navigate('/')
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error?.response?.status === 401) {
         setError('Invalid username or password')
       } else {
         setError('Login failed. Please try again.')
@@ -64,8 +66,9 @@ export default function LoginPage() {
       setActiveTab('login')
       setPassword('')
       setConfirmPassword('')
-    } catch (err: any) {
-      if (err?.response?.status === 409) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error?.response?.status === 409) {
         setError('Username already exists')
       } else {
         setError('Registration failed. Please try again.')
@@ -89,7 +92,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen mesh-bg relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen mesh-bg matrix-bg relative overflow-hidden flex items-center justify-center p-4">
       {/* Floating background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float"></div>
@@ -98,18 +101,18 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <div className="glass-card rounded-3xl p-8 shadow-apple-lg">
+        <div className="glass-card rounded-3xl p-8 shadow-apple-lg animate-slide-up">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-apple">
+            <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-apple animate-pulse-geeky">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl font-bold holographic mb-2">
               {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 animate-fade-in">
               {activeTab === 'login' ? 'Sign in to your expense tracker' : 'Join us to track your expenses'}
             </p>
           </div>
@@ -166,13 +169,14 @@ export default function LoginPage() {
                 />
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                loading={loading}
+                loadingText="Signing in..."
+                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 btn-glitch relative overflow-hidden"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
+                Sign In
+              </LoadingButton>
             </form>
           )}
 
@@ -214,13 +218,14 @@ export default function LoginPage() {
                 />
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                loading={loading}
+                loadingText="Creating Account..."
+                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 btn-glitch relative overflow-hidden"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
+                Create Account
+              </LoadingButton>
             </form>
           )}
 
