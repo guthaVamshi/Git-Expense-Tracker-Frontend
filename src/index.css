@@ -343,6 +343,63 @@ html, body, #root {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
+  
+  /* iOS-style liquid glass effects */
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.37),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Enhanced floating animation */
+  @keyframes float-enhanced {
+    0%, 100% { 
+      transform: translateY(0px) rotate(0deg); 
+      opacity: 0.8;
+    }
+    33% { 
+      transform: translateY(-15px) rotate(1deg); 
+      opacity: 0.9;
+    }
+    66% { 
+      transform: translateY(-5px) rotate(-1deg); 
+      opacity: 1;
+    }
+  }
+  
+  .animate-float-enhanced {
+    animation: float-enhanced 8s ease-in-out infinite;
+  }
+  
+  /* Smooth scale animation */
+  @keyframes smooth-scale {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  .animate-smooth-scale {
+    animation: smooth-scale 4s ease-in-out infinite;
+  }
+  
+  /* Gradient breathing effect */
+  @keyframes gradient-breath {
+    0%, 100% { 
+      background-size: 100% 100%;
+      opacity: 0.8;
+    }
+    50% { 
+      background-size: 110% 110%;
+      opacity: 1;
+    }
+  }
+  
+  .animate-gradient-breath {
+    animation: gradient-breath 3s ease-in-out infinite;
+  }
 }
 
 /* Better mobile input styling */

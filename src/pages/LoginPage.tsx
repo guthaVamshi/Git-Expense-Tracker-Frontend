@@ -25,7 +25,7 @@ export default function LoginPage() {
       await login(username, password)
       // Test the auth by making a request
       await ExpenseAPI.list()
-      navigate('/')
+      navigate('/dashboard')
     } catch (err: unknown) {
       const error = err as { response?: { status?: number } }
       if (error?.response?.status === 401) {

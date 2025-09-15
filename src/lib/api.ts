@@ -63,7 +63,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearAuth()
-      window.location.href = '/login'
+      window.location.href = '/'
     }
     
     // Handle database transaction errors
