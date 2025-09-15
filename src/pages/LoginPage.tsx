@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../store/auth'
 import { ExpenseAPI, UserAPI } from '../lib/api'
 import { LoadingButton } from '../components/LoadingOverlay'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -15,11 +17,59 @@ export default function LoginPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const onLoginSubmit = async (e: React.FormEvent) => {
+  // Interface for form validation
+  interface FormValidation {
+    isValid: boolean
+    errors: string[]
+  }
+
+  // Validation helper function with TypeScript
+  const validateForm = (): FormValidation => {
+    const errors: string[] = []
+    
+    if (!username.trim()) {
+      errors.push('Username is required')
+    } else if (username.length < 3) {
+      errors.push('Username must be at least 3 characters')
+    }
+    
+    if (!password) {
+      errors.push('Password is required')
+    } else if (password.length < 6) {
+      errors.push('Password must be at least 6 characters')
+    }
+    
+    if (activeTab === 'register' && password !== confirmPassword) {
+      errors.push('Passwords do not match')
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    }
+  }
+
+  // Clear form when switching tabs
+  useEffect(() => {
+    setUsername('')
+    setPassword('')
+    setConfirmPassword('')
+    setError(null)
+    setSuccess(null)
+  }, [activeTab])
+
+  const onLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
     setLoading(true)
+
+    const validation = validateForm()
+    if (!validation.isValid) {
+      setError(validation.errors[0])
+      setLoading(false)
+      return
+    }
 
     try {
       await login(username, password)
@@ -38,21 +88,15 @@ export default function LoginPage() {
     }
   }
 
-  const onRegisterSubmit = async (e: React.FormEvent) => {
+  const onRegisterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
     setLoading(true)
 
-    // Validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters long')
+    const validation = validateForm()
+    if (!validation.isValid) {
+      setError(validation.errors[0])
       setLoading(false)
       return
     }
@@ -78,183 +122,277 @@ export default function LoginPage() {
     }
   }
 
-  const resetForm = () => {
-    setUsername('')
-    setPassword('')
-    setConfirmPassword('')
-    setError(null)
-    setSuccess(null)
-  }
-
   const switchTab = (tab: 'login' | 'register') => {
     setActiveTab(tab)
-    resetForm()
   }
 
   return (
-    <div className="min-h-screen mesh-bg matrix-bg relative overflow-hidden flex items-center justify-center p-4">
-      {/* Floating background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/3 left-1/4 w-60 h-60 bg-white/3 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-cyan-500/20 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-gradient-to-r from-pink-400/10 to-orange-500/10 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <div className="glass-card rounded-3xl p-8 shadow-apple-lg animate-slide-up">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-apple animate-pulse-geeky">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
+      {/* Navbar */}
+      <Navbar showAuthButtons={false} currentPage="login" />
+
+      {/* Main Content */}
+      <main className="relative z-10 px-6 py-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Side - Marketing Content */}
+            <div className="hidden lg:block">
+              <div className="animate-slide-up">
+                <h1 className="text-4xl xl:text-5xl font-bold mb-6">
+                  <span className="holographic">Welcome to</span>
+                  <br />
+                  <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Money Find</span>
+                </h1>
+                <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+                  Take control of your finances with our intuitive expense tracking platform. 
+                  Simple, secure, and designed for modern users.
+                </p>
+                
+                {/* Feature Highlights */}
+                <div className="space-y-4 mb-8">
+                  {[
+                    { icon: '🔒', title: 'Secure & Private', desc: 'Your data is protected with industry-standard security' },
+                    { icon: '📊', title: 'Visual Insights', desc: 'Beautiful charts and analytics to understand your spending' },
+                    { icon: '⚡', title: 'Fast & Modern', desc: 'Built with the latest web technologies for optimal performance' }
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-start gap-4 p-4 glass-card rounded-xl shadow-apple">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-xl">
+                        {feature.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-800 mb-1">{feature.title}</h3>
+                        <p className="text-sm text-slate-600">{feature.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Trust Indicators */}
+                <div className="flex items-center gap-6 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    <span>Free to start</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span>No credit card required</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    <span>Setup in minutes</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold holographic mb-2">
-              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
-            </h1>
-            <p className="text-gray-600 animate-fade-in">
-              {activeTab === 'login' ? 'Sign in to your expense tracker' : 'Join us to track your expenses'}
-            </p>
+
+            {/* Right Side - Auth Form */}
+            <div className="w-full max-w-md mx-auto lg:mx-0">
+              <div className="glass-card rounded-3xl p-8 shadow-apple-xl animate-slide-up">
+                
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-apple">
+                    <span className="text-white font-bold text-2xl">₹</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                    {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+                  </h2>
+                  <p className="text-slate-600">
+                    {activeTab === 'login' 
+                      ? 'Sign in to your account to continue' 
+                      : 'Join thousands of users managing their expenses'
+                    }
+                  </p>
+                </div>
+
+                {/* Tab Switcher */}
+                <div className="flex bg-slate-100/50 rounded-2xl p-1 mb-6">
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 text-sm ${
+                      activeTab === 'login'
+                        ? 'bg-white text-slate-800 shadow-apple'
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                    onClick={() => switchTab('login')}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 text-sm ${
+                      activeTab === 'register'
+                        ? 'bg-white text-slate-800 shadow-apple'
+                        : 'text-slate-600 hover:text-slate-800'
+                    }`}
+                    onClick={() => switchTab('register')}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                {/* Error/Success Messages */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm animate-slide-up">
+                    <div className="flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{error}</span>
+                    </div>
+                  </div>
+                )}
+                {success && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-sm animate-slide-up">
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>{success}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Login Form */}
+                {activeTab === 'login' && (
+                  <form onSubmit={onLoginSubmit} className="space-y-5" noValidate>
+                    <div>
+                      <label htmlFor="login-username" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Username
+                      </label>
+                      <input
+                        id="login-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="glass-input w-full px-4 py-3 rounded-xl border border-slate-200/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        placeholder="Enter your username"
+                        autoComplete="username"
+                        required
+                        minLength={3}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="login-password" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Password
+                      </label>
+                      <input
+                        id="login-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="glass-input w-full px-4 py-3 rounded-xl border border-slate-200/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <LoadingButton
+                      type="submit"
+                      loading={loading}
+                      className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl shadow-apple hover:shadow-apple-lg transform hover:scale-105 transition-all duration-200"
+                      loadingText="Signing in..."
+                    >
+                      Sign In
+                    </LoadingButton>
+                  </form>
+                )}
+
+                {/* Register Form */}
+                {activeTab === 'register' && (
+                  <form onSubmit={onRegisterSubmit} className="space-y-5" noValidate>
+                    <div>
+                      <label htmlFor="register-username" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Username
+                      </label>
+                      <input
+                        id="register-username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="glass-input w-full px-4 py-3 rounded-xl border border-slate-200/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        placeholder="Choose a username"
+                        autoComplete="username"
+                        required
+                        minLength={3}
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Minimum 3 characters</p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="register-password" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Password
+                      </label>
+                      <input
+                        id="register-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="glass-input w-full px-4 py-3 rounded-xl border border-slate-200/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        placeholder="Create a password"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="register-confirm" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Confirm Password
+                      </label>
+                      <input
+                        id="register-confirm"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="glass-input w-full px-4 py-3 rounded-xl border border-slate-200/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+                        placeholder="Confirm your password"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <LoadingButton
+                      type="submit"
+                      loading={loading}
+                      className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl shadow-apple hover:shadow-apple-lg transform hover:scale-105 transition-all duration-200"
+                      loadingText="Creating Account..."
+                    >
+                      Create Account
+                    </LoadingButton>
+                  </form>
+                )}
+
+                {/* Switch Form Link */}
+                <div className="mt-6 text-center text-sm text-slate-600">
+                  <p>
+                    {activeTab === 'login' ? "Don't have an account? " : "Already have an account? "}
+                    <button
+                      type="button"
+                      onClick={() => switchTab(activeTab === 'login' ? 'register' : 'login')}
+                      className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200"
+                    >
+                      {activeTab === 'login' ? 'Sign up here' : 'Sign in here'}
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-
-          {/* Tabs */}
-          <div className="flex mb-6 bg-white/20 rounded-2xl p-1">
-            <button
-              type="button"
-              onClick={() => switchTab('login')}
-              className={`flex-1 py-3 px-4 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                activeTab === 'login'
-                  ? 'bg-white text-gray-800 shadow-apple'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => switchTab('register')}
-              className={`flex-1 py-3 px-4 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                activeTab === 'register'
-                  ? 'bg-white text-gray-800 shadow-apple'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {/* Login Form */}
-          {activeTab === 'login' && (
-            <form onSubmit={onLoginSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Username</label>
-                <input
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Password</label>
-                <input
-                  type="password"
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <LoadingButton
-                type="submit"
-                loading={loading}
-                loadingText="Signing in..."
-                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 btn-glitch relative overflow-hidden"
-              >
-                Sign In
-              </LoadingButton>
-            </form>
-          )}
-
-          {/* Registration Form */}
-          {activeTab === 'register' && (
-            <form onSubmit={onRegisterSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Username</label>
-                <input
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Password</label>
-                <input
-                  type="password"
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Confirm Password</label>
-                <input
-                  type="password"
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm font-medium placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <LoadingButton
-                type="submit"
-                loading={loading}
-                loadingText="Creating Account..."
-                className="w-full bg-gradient-to-r from-primary to-primary/90 text-white font-semibold py-4 px-6 rounded-2xl shadow-apple hover:shadow-apple-lg transform hover:scale-[1.02] transition-all duration-200 btn-glitch relative overflow-hidden"
-              >
-                Create Account
-              </LoadingButton>
-            </form>
-          )}
-
-          {/* Error/Success Messages */}
-          {error && (
-            <div className="mt-6 bg-red-50/80 border border-red-200/50 rounded-2xl p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-red-700 text-sm font-medium">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="mt-6 bg-green-50/80 border border-green-200/50 rounded-2xl p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <p className="text-green-700 text-sm font-medium">{success}</p>
-              </div>
-            </div>
-          )}
-
-       
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <Footer variant="auth" />
     </div>
   )
 }
