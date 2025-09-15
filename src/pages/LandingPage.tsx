@@ -86,7 +86,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-apple">
                   <span className="text-white font-bold text-lg">₹</span>
                 </div>
-                <span className="text-2xl font-bold holographic">Paisa</span>
+                <span className="text-2xl font-bold holographic">Money Find</span>
               </div>
               
               <div className="hidden md:flex items-center gap-8">
@@ -288,7 +288,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-apple">
                   <span className="text-white font-bold text-lg">₹</span>
                 </div>
-                <span className="text-2xl font-bold holographic">Paisa</span>
+                <span className="text-2xl font-bold holographic">Money Find</span>
               </div>
               
               <div className="flex items-center gap-6">

@@ -227,7 +227,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold holographic animate-pulse-geeky">
-                $ Paisa 
+                $ Money Find
               </h1>
               <div className={`px-4 sm:px-6 py-2 sm:py-3 rounded-2xl text-sm font-semibold shadow-apple backdrop-blur-sm border transition-all duration-300 hover:scale-105 ${
             net >= 0 
